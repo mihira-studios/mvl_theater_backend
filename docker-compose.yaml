@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: mihira-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin  
+      POSTGRES_PASSWORD: admin  
+      POSTGRES_DB: testdb01
+      TZ: Asia/Kolkata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak_server
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: postgres
+      KC_DB_URL_PORT: "5432"
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: secretadmin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    command:
+      - start
+      - --http-enabled=true
+      - --hostname-strict=false
+  backend:
+    build:
+      context: ./backend          # folder where your Dockerfile + app/ live
+      dockerfile: Dockerfile
+    container_name: mvl-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+    ports:
+      - "4007:8010"
