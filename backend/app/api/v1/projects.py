@@ -23,13 +23,19 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail="Project code already exists",
         )
+
     project = Project(
         name=payload.name,
         code=payload.code,
-        library=payload.library,
-        active=payload.active,
+        description=payload.description,
+        type=payload.type,
+        status=payload.status,
+        archived=payload.archived,
+        thumbnail=str(payload.thumbnail) if payload.thumbnail else None,
         config=payload.config,
+        # active, created_at, updated_at, updated_by can rely on model defaults
     )
+
     db.add(project)
     db.commit()
     db.refresh(project)

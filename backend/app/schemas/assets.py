@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 from typing import Optional, Dict, Any
 
+
 class AssetCreate(BaseModel):
     project_id: UUID
     asset_category_id: UUID
@@ -19,3 +20,8 @@ class AssetOut(AssetCreate):
 
     class Config:
         orm_mode = True
+
+class AssetFromCSV(BaseModel):
+    name: str
+    status: str | None = None
+    meta: dict

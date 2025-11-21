@@ -9,10 +9,10 @@ class AssetCategory(Base):
     __tablename__ = "asset_categories"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    asset_type_id = Column(UUID(as_uuid=True), ForeignKey("asset_types.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("project_id", "name", name="uq_asset_category_project_name"),
+        UniqueConstraint("asset_type_id", "name", name="uq_asset_category_type_name"),
     )

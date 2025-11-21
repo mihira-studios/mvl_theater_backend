@@ -4,8 +4,6 @@ from datetime import datetime
 from uuid import UUID
 
 class AssetTypeCreate(BaseModel):
-    project_id: UUID
-    asset_category_id: UUID
     name: str
 
 class AssetTypeOut(AssetTypeCreate):

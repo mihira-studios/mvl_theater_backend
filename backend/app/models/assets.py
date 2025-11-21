@@ -5,6 +5,7 @@ from datetime import datetime
 import uuid
 from ..db import Base
 
+    
 class Asset(Base):
     __tablename__ = "assets"
 

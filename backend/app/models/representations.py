@@ -1,6 +1,6 @@
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from datetime import datetime
 import uuid
 from ..db import Base
@@ -15,4 +15,8 @@ class Representation(Base):
     path = Column(Text, nullable=False)
     hash = Column(String, nullable=True)
     size_bytes = Column(BigInteger, nullable=False, default=0)
+    thumbnail_path = Column(Text, nullable=True)
+    thumbnail_ext = Column(String, nullable=True)
+    thumbnail_size_bytes = Column(BigInteger, nullable=True)
+    thumbnail_boxes = Column(JSONB, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

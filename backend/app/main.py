@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api.v1 import api_router
+from .api.v1 import api_router, ai_tagging
 
 app = FastAPI(title="MVL API", version="1.0.0")
 
@@ -20,3 +20,4 @@ def health():
     return {"status": "ok"}
 
 app.include_router(api_router, prefix="/api/v1")
+#app.include_router(ai_tagging.router, prefix="/api")
