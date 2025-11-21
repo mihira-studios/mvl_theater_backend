@@ -9,8 +9,8 @@ class AssetCreate(BaseModel):
     project_id: UUID
     asset_category_id: UUID
     asset_type_id: UUID
-    code: str
-    name: Optional[str] = None
+    code: Optional[str] = None
+    name: str = None
     status: str = "new"
     meta: Dict[str, Any] = {}
 
