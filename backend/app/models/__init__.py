@@ -14,7 +14,6 @@ from .tasks import Task
 from .product_types import ProductType
 from .products import Product
 from .versions import Version
-from .representations import Representation
 from .links import Link
 
 __all__ = [
@@ -33,6 +32,5 @@ __all__ = [
     "ProductType",
     "Product",
     "Version",
-    "Representation",
     "Link",
 ]

@@ -14,7 +14,6 @@ from .tasks import TaskOut, TaskCreate
 from .product_types import ProductTypeOut, ProductTypeCreate
 from .products import ProductOut, ProductCreate
 from .versions import VersionOut, VersionCreate
-from .representations import RepresentationOut, RepresentationCreate
 
 __all__ = [
     "UserOut",
@@ -41,6 +40,4 @@ __all__ = [
     "ProductCreate",
     "VersionOut",
     "VersionCreate",
-    "RepresentationOut",
-    "RepresentationCreate",
 ]
