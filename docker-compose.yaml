@@ -10,7 +10,7 @@ volumes:
       driver_opts:
           type: cifs
           device: "//nas01/devs/deepakt/bb3"
-          o: "username=deepakt,password=Th@pl1yal84,domain=MVLHQ"
+          o: "username=deepakt,password=***,domain=MVLHQ"
 
 
 services:
@@ -75,6 +75,6 @@ services:
       - postgres
     ports:
       - "4007:8010"
-    volumes:
-      - "data-volume:/mnt/bb3"
+    #volumes:
+    #  - "data-volume:/mnt/bb3"
   
