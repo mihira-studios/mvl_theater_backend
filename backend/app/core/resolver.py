@@ -56,23 +56,15 @@ def resolve_asset_type_id(db: Session, project_id, category_id, name: str):
     return t.id
 
 
-def resolve_product_type_id(db: Session, project_id, name: str):
-    n = _normalize_name(name)
+def resolve_product_type_id(db: Session, name: str):
+    n = name.lower()
 
     q = db.query(ProductType).filter(
         func.lower(ProductType.name) == n
     )
-
-    if hasattr(ProductType, "project_id"):
-        q = q.filter(ProductType.project_id == project_id)
-
     pt = q.first()
-
-    # if not found, fallback to default "model"
     if not pt:
-        q2 = db.query(ProductType).filter(func.lower(ProductType.name) == "model")
-        if hasattr(ProductType, "project_id"):
-            q2 = q2.filter(ProductType.project_id == project_id)
+        q2 = db.query(ProductType).filter(func.lower(ProductType.name) == 'model')
         pt = q2.first()
 
     if not pt:
@@ -90,3 +82,10 @@ def next_version_number(db: Session, product_id):
         .scalar()
     )
     return (max_ver or 0) + 1
+
+def _merge_json(old: dict | None, new: dict | None) -> dict:
+    if new is None:
+        return old or {}
+    base = old or {}
+    base.update(new)
+    return base

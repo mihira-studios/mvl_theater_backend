@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from datetime import datetime
 import uuid
 from ..db import Base
-
+from sqlalchemy.orm import relationship
     
 class Asset(Base):
     __tablename__ = "assets"
@@ -18,3 +18,10 @@ class Asset(Base):
     status = Column(Text, nullable=False, default="new")
     meta = Column(JSONB, default=dict, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    shots = relationship(
+        "Shot",
+        secondary = "asset_shot_links",
+        back_populates = "assets",
+        passive_deletes=True,
+    )

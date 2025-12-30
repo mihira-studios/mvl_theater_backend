@@ -12,7 +12,6 @@ volumes:
           device: "//nas01/devs/deepakt/bb3"
           o: "username=deepakt,password=***,domain=MVLHQ"
 
-
 services:
   postgres:
     image: postgres:16
@@ -29,19 +28,19 @@ services:
       - ./dbdata:/var/lib/postgresql/data
       - ./migrations:/docker-entrypoint-initdb.d:ro
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    volumes:
-      - minio-data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    networks:
-      - backend-network
+  # minio:
+  #   image: minio/minio:latest
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin123
+  #   volumes:
+  #     - minio-data:/data
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   networks:
+  #     - backend-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -49,7 +48,7 @@ services:
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
-      KC_DB_URL_DATABASE: postgres
+      KC_DB_URL_DATABASE: keycloak
       KC_DB_URL_PORT: "5432"
       KC_DB_USERNAME: admin
       KC_DB_PASSWORD: admin
@@ -59,10 +58,7 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
-    command:
-      - start
-      - --http-enabled=true
-      - --hostname-strict=false
+    command: ["start-dev"]
   backend:
     build:
       context: ./backend          # folder where your Dockerfile + app/ live
@@ -75,6 +71,5 @@ services:
       - postgres
     ports:
       - "4007:8010"
-    #volumes:
-    #  - "data-volume:/mnt/bb3"
+
   

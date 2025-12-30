@@ -1,34 +1,31 @@
-from pydantic import BaseModel
-from datetime import datetime
+from typing import Optional
 from uuid import UUID
-from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
 
-from .versions import VersionCreate  # import your updated VersionCreate
-
+from .versions import VersionCreate, VersionOut
 
 class ProductCreate(BaseModel):
     project_id: UUID
+    owner_kind: str = Field(..., description="asset | shot | task")
+    owner_id: UUID
     product_type_id: UUID
-    user_id: UUID
-    name: str
-    status: str = "draft"
-
-    asset_id: Optional[UUID] = None
-    shot_id: Optional[UUID] = None
-    task_id: Optional[UUID] = None
-
-    # optional extra info about the product, if your Product model has `meta`
-    meta: Optional[Dict[str, Any]] = None
+    status: Optional[str] = "draft"
+    created_by: UUID  # user id
 
 
-# Use this ONLY for endpoints that also create an initial version
 class ProductCreateWithVersion(ProductCreate):
     version: VersionCreate
 
 
-class ProductOut(ProductCreate):
+class ProductOut(BaseModel):
     id: UUID
-    created_at: datetime
+    project_id: UUID
+    owner_kind: str
+    owner_id: UUID
+    product_type_id: UUID
+    status: str
+    created_by: UUID
+    created_at: str  # or datetime if you prefer
 
     class Config:
-        orm_mode = True
+        from_attributes = True

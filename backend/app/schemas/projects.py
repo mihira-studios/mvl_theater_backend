@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import UUID
 from typing import Optional, Dict, Any
 
-
+from sqlalchemy import Column, DateTime, ForeignKey, String, UniqueConstraint, Index
 # -------------------------
 # Incoming data (Create)
 # -------------------------
@@ -18,6 +18,16 @@ class ProjectCreate(BaseModel):
     config: Dict[str, Any] = {}        # Custom pipeline config
 
 
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    type: Optional[str] = None
+    status: Optional[str] = None
+    archived: Optional[bool] = None
+    thumbnail: Optional[HttpUrl] = None   # allow set or clear with null
+    config: Optional[Dict[str, Any]] = None
+
 # -------------------------
 # Outgoing data (Read)
 # -------------------------
@@ -28,4 +38,13 @@ class ProjectOut(ProjectCreate):
     updated_by: Optional[str] = None   # Updated By (user email or name)
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class AddUserToProjectIn(BaseModel):
+    project_id: UUID
+    user_kc_id: str
+    role: str  
+
+class UpdateUserProjectRoleIn(BaseModel):
+    role: str

@@ -1,21 +1,24 @@
 
 from fastapi import APIRouter
 from . import (
-    users,
-    projects,
     access_groups,
     asset_categories,
+    asset_shot_link,
     asset_types,
-    sequences,
     assets,
+    auth,
+    products,
+    product_types,
+    projects,
+    sequences,
     shots,
     tasks,
-    product_types,
-    products,
+    users,
     versions,
 )
 
 api_router = APIRouter()
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(access_groups.router, prefix="/access-groups", tags=["access-groups"])
@@ -28,3 +31,4 @@ api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(product_types.router, prefix="/product-types", tags=["product-types"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
 api_router.include_router(versions.router, prefix="/versions", tags=["versions"])
+

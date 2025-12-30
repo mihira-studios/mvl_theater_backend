@@ -9,3 +9,5 @@ email-validator
 alembic
 pillow
 boto3
+python-jose[cryptography] 
+requests

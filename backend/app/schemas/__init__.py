@@ -14,6 +14,7 @@ from .tasks import TaskOut, TaskCreate
 from .product_types import ProductTypeOut, ProductTypeCreate
 from .products import ProductOut, ProductCreate
 from .versions import VersionOut, VersionCreate
+from .asset_shot_links import AssetShotLinkBase, AssetShotLinkCreate, AssetShotLinkDelete, AssetShotLinkRead
 
 __all__ = [
     "UserOut",
@@ -27,17 +28,26 @@ __all__ = [
     "AssetTypeOut",
     "AssetTypeCreate",
     "SequenceOut",
+    "SequenceRead",
     "SequenceCreate",
+    "SequenceUpdate",
     "AssetOut",
     "AssetCreate",
     "ShotOut",
     "ShotCreate",
+    "ShotRead",
+    "ShotOut",
     "TaskOut",
     "TaskCreate",
     "ProductTypeOut",
-    "ProductTypeCreate",
+    "ProductCreate",
     "ProductOut",
     "ProductCreate",
     "VersionOut",
     "VersionCreate",
+    "AssetShotLinkBase",
+    "AssetShotLinkCreate",
+    "AssetShotLinkDelete",
+    "AssetShotLinkRead",
+    "AssetShotLinkOut",
 ]

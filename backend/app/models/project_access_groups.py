@@ -8,25 +8,16 @@ from ..db import Base
 class ProjectAccessGroup(Base):
     __tablename__ = "project_access_groups"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     project_id = Column(
         UUID(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
+        primary_key= True,
     )
     access_group_id = Column(
         UUID(as_uuid=True),
         ForeignKey("access_groups.id", ondelete="CASCADE"),
-        nullable=False,
+        primary_key= True,
     )
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint("project_id", "access_group_id", name="uq_project_group"),
-    )
-
-    # Optional relationships if you like:
-    # project = relationship("Project", backref="project_groups")
-    # access_group = relationship("AccessGroup", backref="project_links")

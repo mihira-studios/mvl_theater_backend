@@ -1,14 +1,17 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 from datetime import datetime
 from uuid import UUID
 
+from typing import Optional
+
 class AssetTypeCreate(BaseModel):
     name: str
+    default_thumbnail_path: Optional[HttpUrl] = None  # can store URL or relative path
 
 class AssetTypeOut(AssetTypeCreate):
     id: UUID
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

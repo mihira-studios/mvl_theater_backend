@@ -12,3 +12,6 @@ class AssetType(Base):
     name = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    default_thumbnail_path = Column(String, nullable= True)
+
+

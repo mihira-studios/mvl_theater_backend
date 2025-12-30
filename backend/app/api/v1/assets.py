@@ -16,11 +16,13 @@ from ...schemas.assets import (
     AssetFromCSV,
     AssetCreateWithProductAndVersion,
     AssetBootstrapCreateMinimal,
+    AssetUpdate
 )
 from ...core.resolver import (
     resolve_asset_type_id,
     resolve_asset_category_id,
     resolve_product_type_id,
+    next_version_number,
 )
 from ...schemas.versions import VersionOut
 
@@ -33,6 +35,7 @@ from ...core.s3 import (
 router = APIRouter()
 
 CSV_ASSETS_PATH = Path("/mnt/bb3/Asset.csv")
+SYSTEM_USER_ID = UUID("d8b24205-d613-4eaf-bd7e-f3d8675ac875")
 
 
 @router.get("/", response_model=List[AssetOut])
@@ -61,7 +64,7 @@ def create_asset(payload: AssetBootstrapCreateMinimal, db: Session = Depends(get
             db, payload.project_id, asset_category_id, payload.asset_type
         )
         product_type_id = resolve_product_type_id(
-            db, payload.project_id, payload.product_type
+            db, payload.product_type or "model"
         )
 
         # ---- 1) create Asset ----
@@ -77,15 +80,14 @@ def create_asset(payload: AssetBootstrapCreateMinimal, db: Session = Depends(get
         db.add(asset)
         db.flush()  # asset.id now available
 
-        # ---- 2) create Product ----
+        # ---- 2) create Product (MINIMAL, NORMALIZED) ----
         product = Product(
             project_id=payload.project_id,
-            asset_id=asset.id,
+            owner_kind="asset",
+            owner_id=asset.id,
             product_type_id=product_type_id,
-            name=payload.asset_name if payload.product_type == "model" else f"{payload.asset_name} - {payload.product_type}",
-            status=payload.product_status,
-            user_id=payload.user_id,
-            meta=payload.product_meta,
+            status=payload.product_status or "wip",
+            created_by=payload.user_id or SYSTEM_USER_ID,
         )
         db.add(product)
         db.flush()
@@ -98,7 +100,7 @@ def create_asset(payload: AssetBootstrapCreateMinimal, db: Session = Depends(get
             version=ver_num,
             status=payload.version_status,
             notes=payload.notes,
-            user_id=payload.user_id,
+            user_id=payload.user_id or SYSTEM_USER_ID,
 
             path=payload.path,
             ext=payload.ext,
@@ -138,7 +140,10 @@ def get_asset_detail(
     latest_version = (
         db.query(Version)
         .join(Product, Product.id == Version.product_id)
-        .filter(Product.asset_id == asset_id)
+        .filter(
+            Product.owner_kind == "asset",
+            Product.owner_id == asset_id
+        )
         .order_by(Version.created_at.desc())
         .first()
     )
@@ -146,9 +151,24 @@ def get_asset_detail(
     if latest_version:
         asset_out.path = latest_version.path
         asset_out.thumbnail_path = latest_version.thumbnail_path
+        return asset_out
+    
+    if asset.meta and asset.meta.get("thumbnail_path"):
+        asset_out.thumbnail_path = asset.meta["thumbnail_path"]
+        return asset_out
+    
+    asset_cat = db.query(AssetCategory).get(asset.asset_category_id)
+    if asset_cat and asset_cat.default_thumbnail_path:
+        asset_out.thumbnaiil_path = asset_cat.default_thumbnail_path
+        return asset_out
 
+    asset_type = db.query(AssetType).get(asset.asset_type_id)
+    if asset_type and asset_type.default_thumbnail_path:
+        asset_out.thumbnail_path = asset_type.default_thumbnail_path
+        return asset_out
+
+    asset_out.thumbnail_path = None
     return asset_out
-
 
 @router.get("/{asset_id}/versions", response_model=List[VersionOut])
 def list_asset_versions(
@@ -160,7 +180,10 @@ def list_asset_versions(
     versions = (
         db.query(Version)
         .join(Product, Product.id == Version.product_id)
-        .filter(Product.asset_id == asset_id)
+        .filter(
+            Product.owner_kind == "asset",
+            Product.owner_id == asset_id
+        )
         .order_by(Version.created_at.desc())
         .all()
     )
@@ -266,3 +289,142 @@ def get_asset_download_url(
 
     url = create_presigned_download_url(file_key)
     return PresignedUrlOut(url=url, key=file_key, bucket=S3_BUCKET)
+
+
+@router.patch("/{asset_id}", response_model=AssetOut)
+def update_asset(
+    asset_id: UUID,
+    payload: AssetUpdate,
+    db: Session = Depends(get_db),
+):
+    asset = _get_asset_or_404(db, asset_id)
+
+    try:
+        # ----- resolve category by name if provided -----
+        if payload.asset_category:
+            asset.asset_category_id = resolve_asset_category_id(
+                db, asset.project_id, payload.asset_category
+            )
+
+        # ----- resolve type by name if provided -----
+        if payload.asset_type:
+            asset.asset_type_id = resolve_asset_type_id(
+                db, asset.project_id, asset.asset_category_id, payload.asset_type
+            )
+
+        # ----- direct asset field updates -----
+        if payload.name is not None:
+            asset.name = payload.name
+
+        if payload.code is not None:
+            asset.code = payload.code
+
+        if payload.status is not None:
+            asset.status = payload.status
+
+        if payload.meta is not None:
+            asset.meta = _merge_json(asset.meta, payload.meta)
+
+        db.add(asset)
+        db.flush()
+
+
+        # ===================== MEDIA UPDATE / CREATE VERSION =====================
+        wants_media_update = any([
+            payload.path is not None,
+            payload.ext is not None,
+            payload.thumbnail_path is not None,
+            payload.thumbnail_ext is not None,
+            payload.thumbnail_metadata is not None,
+        ])
+
+        latest_version = None  # make sure defined
+
+        if wants_media_update:
+            latest_version = (
+                db.query(Version)
+                .join(Product, Product.id == Version.product_id)
+                .filter(
+                    Product.owner_kind == "asset",
+                    Product.owner_id == asset_id
+                )
+                .order_by(Version.created_at.desc())
+                .first()
+            )
+
+            # If no version exists, create Product + Version minimal
+            if not latest_version:
+                product_type_id = resolve_product_type_id(
+                    db, payload.product_type or "model"
+                )
+
+                # Create minimal Product
+                product = Product(
+                    project_id=asset.project_id,
+                    owner_kind="asset",
+                    owner_id=asset.id,
+                    product_type_id=product_type_id,
+                    status=payload.product_status or "wip",
+                    created_by=payload.user_id or SYSTEM_USER_ID,
+                )
+                db.add(product)
+                db.flush()
+
+                ver_num = next_version_number(db, product.id)
+
+                latest_version = Version(
+                    product_id=product.id,
+                    version=ver_num,
+                    status=payload.version_status or "wip",
+                    notes=payload.notes,
+                    user_id=payload.user_id or SYSTEM_USER_ID,
+
+                    path=payload.path,
+                    ext=payload.ext,
+
+                    thumbnail_path=payload.thumbnail_path,
+                    thumbnail_ext=payload.thumbnail_ext,
+                    thumbnail_metadata=payload.thumbnail_metadata,
+
+                    meta={},
+                    tags=None,
+                )
+                db.add(latest_version)
+
+            else:
+                # Update latest version fields
+                if payload.path is not None:
+                    latest_version.path = payload.path
+                if payload.ext is not None:
+                    latest_version.ext = payload.ext
+                if payload.thumbnail_path is not None:
+                    latest_version.thumbnail_path = payload.thumbnail_path
+                if payload.thumbnail_ext is not None:
+                    latest_version.thumbnail_ext = payload.thumbnail_ext
+                if payload.thumbnail_metadata is not None:
+                    latest_version.thumbnail_metadata = payload.thumbnail_metadata
+
+                db.add(latest_version)
+
+        # ===================== COMMIT + RETURN =====================
+        db.commit()
+        db.refresh(asset)
+
+        asset_out = AssetOut.from_orm(asset)
+
+        if wants_media_update and latest_version:
+            asset_out.path = latest_version.path
+            asset_out.thumbnail_path = latest_version.thumbnail_path
+        else:
+            asset_out.path = None
+            asset_out.thumbnail_path = None
+
+        return asset_out
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update asset: {e}")
+
