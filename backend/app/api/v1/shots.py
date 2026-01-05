@@ -30,7 +30,6 @@ def create_shot_endpoint(
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
-    # ShotOut is alias of ShotRead, so this is fine
     return ShotOut.model_validate(shot)
 
 

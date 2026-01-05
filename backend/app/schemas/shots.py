@@ -43,31 +43,43 @@ class TaskMini(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ---- Base / Create / Update ----
 class ShotBase(BaseModel):
     code: str
     name: Optional[str] = None
+    description: Optional[str] = None
     status: str = "new"
+
+    cut_in: Optional[float] = None
+    cut_out: Optional[float] = None
+    cut_duration: Optional[float] = None
+
+    head_in: Optional[float] = None
+    head_out: Optional[float] = None
+    head_duration: Optional[float] = None
+
+    tail_in: Optional[float] = None
+    tail_out: Optional[float] = None
+    tail_duration: Optional[float] = None
+
+    fps: Optional[float] = None
+    cut_order: Optional[int] = None
+
     meta: Dict[str, Any] = Field(default_factory=dict)
+
 
 
 class ShotCreate(ShotBase):
     project_id: UUID
-    sequence_id: Optional[UUID] = None
-
-    # optional: allow setting asset links at create
+    sequence_id: UUID
     asset_ids: List[UUID] = Field(default_factory=list)
 
 
-class ShotUpdate(BaseModel):
+class ShotUpdate(ShotBase):
     code: Optional[str] = None
     name: Optional[str] = None
     status: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
     sequence_id: Optional[UUID] = None
-
-    # optional: replace asset links via PATCH
     asset_ids: Optional[List[UUID]] = None
 
 
