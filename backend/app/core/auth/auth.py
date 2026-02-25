@@ -7,8 +7,8 @@ from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-KC_BASE = os.getenv("KC_BASE", "http://10.100.1.30:8080")
-KC_ISSUER = os.getenv("KC_BASE", "http://10.100.1.30:8080")
+KC_BASE = os.getenv("KC_BASE", "http://10.100.0.85:8080")
+KC_ISSUER = os.getenv("KC_BASE", "http://localhost:8080")
 REALM = os.getenv("KC_RELAM","MIHIRA-REALM")
 ALGORITHMS = ["RS256"]
 

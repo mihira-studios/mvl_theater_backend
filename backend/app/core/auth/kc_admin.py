@@ -1,6 +1,6 @@
 import os, requests, time
 
-KC_BASE = os.getenv("KC_BASE", "http://10.100.1.30:8080")
+KC_BASE = os.getenv("KC_BASE", "http://keycloak_server:8080")
 MASTER_ADMIN_USER = os.getenv("KC_MASTER_ADMIN_USER", "admin")
 MASTER_ADMIN_PASS = os.getenv("KC_MASTER_ADMIN_PASS", "secretadmin")
 
