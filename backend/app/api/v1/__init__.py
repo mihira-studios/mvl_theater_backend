@@ -15,6 +15,7 @@ from . import (
     tasks,
     users,
     versions,
+    script_breakdown,
 )
 
 api_router = APIRouter()
@@ -31,4 +32,4 @@ api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(product_types.router, prefix="/product-types", tags=["product-types"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
 api_router.include_router(versions.router, prefix="/versions", tags=["versions"])
-
+api_router.include_router(script_breakdown.router, prefix="/script", tags=["Script Breakdown"])
